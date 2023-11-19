@@ -10,11 +10,12 @@ pool:
     name: Default
     demands: UnityBuildServer
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+jobs:
+  - job: BuildGameWindows
+    steps:
+    - task: UnityBuildTask@3
+      inputs:
+        buildTarget: 'standalone'
+        unityEditorsPathMode: 'unityHub'
+        outputPath: '$(Build.BinariesDirectory)\Build'
+        outputFilename: 'build'
