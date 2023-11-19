@@ -11,11 +11,49 @@ pool:
     demands: UnityBuildServer
 
 jobs:
-  - job: BuildGameAndoird
+  - job: Prepare
+    steps:
+    - task: DeleteFiles@1
+      displayName: 'Clean Up Old Artifact'
+      inputs:
+        SourceFolder: '$(Buid.ArtifactStagingDirectory)'
+        Contents: '**/*'
+    - task: DeleteFiles@1
+      displayName: Delete Old Library
+      inputs:
+        SourceFolder: '$(Buid.Repository.LocalPath)\Library'
+        Contents: '**/*'
+    - task: CmdLine@2
+      displayName: 'Restore library from last build for performance'
+      inputs:
+        script: 'if EXIST "$(Build.BinariesDirectory)\Library\" move "$(Build.BinariesDirectory)\Library" "$(Buid.Repository.LocalPath)\Library"'
+
+  - job: BuildGameAndroid
+    dependsOn: Prepare
     steps:
     - task: UnityBuildTask@3
       inputs:
         buildTarget: 'Android'
         versionSelectionMode: 'project'
         outputPath: '$(Build.BinariesDirectory)'
-        outputFileName: 'andoird'
+        outputFileName: 'androidbuild'
+  - job: Publish
+    dependsOn: BuildGameAndroid
+    steps:
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.BinariesDirectory)\Build'
+          includeRootFolder: true
+          archiveType: 'zip'
+          archiveFile: '$(Buid.ArtifactStagingDirectory)\demobuild.zip'
+          replaceExistingArchive: true
+      - task: PowerShell@2
+        env:
+          BLOB_URL: $(https://unitybuild1.blob.core.windows.net/build?sp=racwl&st=2023-11-19T08:56:29Z&se=2024-11-19T16:56:29Z&spr=https&sv=2022-11-02&sr=c&sig=kQ9eWwMPTNM8cJXVi05hIqSv7aQ5ln7QtbDiF%2BKBpOI%3D)
+        inputs:
+          targetType: 'inline'
+          script: 'echo ${env:BLOB_URL}'
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: 'cd "C:\Users\dev\Downloads\azcopy_windows_amd64_10.21.2\azcopy_windows_amd64_10.21.2"; .\azcopy copy "$(Buid.ArtifactStagingDirectory)\demobuild.zip" "https://unitybuild1.blob.core.windows.net/build?sp=racwl&st=2023-11-19T08:56:29Z&se=2024-11-19T16:56:29Z&spr=https&sv=2022-11-02&sr=c&sig=kQ9eWwMPTNM8cJXVi05hIqSv7aQ5ln7QtbDiF%2BKBpOI%3D" --log-level=INFO --recursive'
