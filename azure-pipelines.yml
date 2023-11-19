@@ -8,7 +8,7 @@ trigger:
 
 pool:
     name: Default
-    demands: TestAzurePipeline
+    demands: UnityBuildServer
 
 steps:
 - script: echo Hello, world!
