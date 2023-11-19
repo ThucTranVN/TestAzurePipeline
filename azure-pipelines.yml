@@ -11,11 +11,11 @@ pool:
     demands: UnityBuildServer
 
 jobs:
-  - job: BuildGameWindows
+  - job: BuildGameAndoird
     steps:
     - task: UnityBuildTask@3
       inputs:
-        buildTarget: 'standalone'
-        unityEditorsPathMode: 'unityHub'
-        outputPath: '$(Build.BinariesDirectory)\Build'
-        outputFilename: 'build'
+        buildTarget: 'Android'
+        versionSelectionMode: 'project'
+        outputPath: '$(Build.BinariesDirectory)'
+        outputFileName: 'andoird'
